@@ -7,10 +7,11 @@ export interface ManagedUser extends User {
 }
 
 export const mockUsers: ManagedUser[] = [
+  { id: '0', username: 'admin', role: UserRole.Admin, active: true, password: 'Admin123', email: 'admin@tenda.gov.gh', contact: '0000000000' },
   { id: '1', username: 'head_of_dept', role: UserRole.Head, active: true, password: 'password123', email: 'head@example.com', contact: '1234567890' },
-  { id: '2', username: 'deo_officer', role: UserRole.DateEntryOfficer, active: true },
-  { id: '3', username: 'secretary_staff', role: UserRole.Secretary, active: false },
-  { id: '4', username: 'staff_member', role: UserRole.Staff, active: true },
+  { id: '2', username: 'deo_officer', role: UserRole.DateEntryOfficer, active: true, password: 'password123' },
+  { id: '3', username: 'secretary_staff', role: UserRole.Secretary, active: false, password: 'password123' },
+  { id: '4', username: 'staff_member', role: UserRole.Staff, active: true, password: 'password123' },
 ];
 
 export const UserService = {

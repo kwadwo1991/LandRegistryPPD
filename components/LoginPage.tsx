@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import * as authService from '../services/authService';
-import { UserRole } from '../types';
 import classnames from 'classnames';
 import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,15 +10,13 @@ const LoginPage: React.FC = () => {
   const { login } = useContext(AuthContext);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState(UserRole.Head);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     setError('');
     const isStaff = activeTab === 'Staff';
-    const credentials = isStaff ? role : password;
-    const user = await authService.login(username, credentials, isStaff);
+    const user = await authService.login(username, password, isStaff);
     if (user) {
       login(user);
     } else {
@@ -96,14 +93,12 @@ const LoginPage: React.FC = () => {
             {activeTab === 'Staff' && (
                 <>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-xs font-bold mb-2" htmlFor="role">Role</label>
-                        <select id="role" value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            {Object.values(UserRole).filter(r => r !== UserRole.Admin).map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                        <label className="block text-gray-700 text-xs font-bold mb-2" htmlFor="staff-username">Username</label>
+                        <input className="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500" id="staff-username" type="text" placeholder="Enter your username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
                     <div className="mb-4 relative">
                         <label className="block text-gray-700 text-xs font-bold mb-2" htmlFor="staff-password">Password</label>
-                        <input className="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500" id="staff-password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" />
+                        <input className="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500" id="staff-password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500">
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>

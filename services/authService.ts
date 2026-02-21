@@ -4,17 +4,15 @@ import { mockUsers } from './userService';
 export const login = async (username: string, passwordOrRole: string, isStaff: boolean): Promise<User | null> => {
   const user = mockUsers.find(u => u.username === username);
 
-  if (isStaff) {
-    // In a real app, you'd verify staff credentials against a database
-    const role = passwordOrRole as UserRole;
-    if (user && Object.values(UserRole).includes(role)) {
-        return user;
+  if (user && user.password === passwordOrRole) {
+    if (isStaff && user.role === UserRole.Admin) {
+        // Admin shouldn't login via staff tab if we want to be strict, 
+        // but let's just allow it for now or return null if we want separation.
+        return null; 
     }
-  } else {
-    if (user && user.password === passwordOrRole) {
-      return user;
-    }
+    return user;
   }
+  
   return null;
 };
 
