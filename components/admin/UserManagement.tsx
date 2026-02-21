@@ -7,8 +7,9 @@ import Button from '../ui/Button';
 import { Edit } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
+  
   const navigate = useNavigate();
-  const [users, setUsers] = useState<(User & { id: number; active: boolean })[]>([]);
+  const [users, setUsers] = useState<(User & { id: string; active: boolean })[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -18,12 +19,12 @@ const UserManagement: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleStatusChange = async (userId: number, active: boolean) => {
+  const handleStatusChange = async (userId: string, active: boolean) => {
     await UserService.updateUserStatus(userId, active);
     setUsers(users.map(u => u.id === userId ? { ...u, active } : u));
   };
 
-  const handleRoleChange = async (userId: number, role: UserRole) => {
+  const handleRoleChange = async (userId: string, role: UserRole) => {
     await UserService.updateUserRole(userId, role);
     setUsers(users.map(u => u.id === userId ? { ...u, role } : u));
   };
@@ -64,7 +65,7 @@ const UserManagement: React.FC = () => {
                     </label>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button variant="icon" size="sm"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="icon" size="sm" onClick={() => navigate(`/admin/create-user`)}><Edit className="h-4 w-4" /></Button>
                   </td>
                 </tr>
               ))}

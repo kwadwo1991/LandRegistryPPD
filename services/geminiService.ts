@@ -10,9 +10,9 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
-const systemInstruction = `You are an expert assistant for the Techiman North District Assembly's land registration system. You are knowledgeable about Ghana's Land Use and Spatial Planning Act (LUSPA), 2016 (Act 925) and the Land Act, 2020 (Act 1036). Your role is to guide users through the land registration process. Answer user questions clearly and concisely. Do not provide legal advice, but you can explain procedures and requirements based on the law. Be friendly and professional.`;
+const systemInstruction = (userRole?: string) => `You are an expert assistant for the Techiman North District Assembly's land registration system. You are knowledgeable about Ghana's Land Use and Spatial Planning Act (LUSPA), 2016 (Act 925) and the Land Act, 2020 (Act 1036). Your role is to guide users through the land registration process. Answer user questions clearly and concisely. Do not provide legal advice, but you can explain procedures and requirements based on the law. Be friendly and professional. Current user role: ${userRole || 'Not logged in'}`;
 
-export const getGeminiResponse = async (history: ChatMessage[], newUserMessage: string): Promise<string> => {
+export const getGeminiResponse = async (history: ChatMessage[], newUserMessage: string, userRole?: string): Promise<string> => {
   if (!API_KEY) {
     return "The AI assistant is currently unavailable. Please configure the API Key.";
   }
@@ -30,7 +30,7 @@ export const getGeminiResponse = async (history: ChatMessage[], newUserMessage: 
         model: model,
         contents: contents,
         config: {
-            systemInstruction: systemInstruction,
+            systemInstruction: systemInstruction(userRole),
         },
     });
 

@@ -5,6 +5,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Label from '../ui/Label';
 import Input from '../ui/Input';
+import { UserService } from '../../services/userService';
 
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,10 +14,8 @@ const CreateUserPage: React.FC = () => {
   const [role, setRole] = useState(UserRole.Staff);
 
   const handleCreateUser = async () => {
-    // In a real app, you'd have proper user creation logic here
     try {
-      // await UserService.createUser({ username, password, role }, true);
-      console.log('User created by admin:', { username, password, role });
+      await UserService.createUser({ username, password, role });
       alert(`User ${username} created and activated with role ${role}`);
       navigate('/admin/user-management');
     } catch (err) {

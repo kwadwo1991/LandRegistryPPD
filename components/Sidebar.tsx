@@ -1,8 +1,8 @@
 
 import React, { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus, Search, X, LogOut, Shield } from 'lucide-react';
-import { AuthContext } from '../App';
+import { LayoutDashboard, FilePlus, Search, X, LogOut, Shield, User as UserIcon } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 import { UserRole } from '../types';
 
 const GhanaCoatOfArms: React.FC = () => (
@@ -71,6 +71,7 @@ const Sidebar: React.FC = () => {
                 <NavItem to="/new-registration" icon={<FilePlus size={20} />} label="New Registration" />
               )}
               <NavItem to="/registrations" icon={<Search size={20} />} label="Search Records" />
+              <NavItem to="/profile" icon={<UserIcon size={20} />} label="Profile" />
               {user.role === UserRole.Admin && (
                 <NavItem to="/admin" icon={<Shield size={20} />} label="Admin" />
               )}

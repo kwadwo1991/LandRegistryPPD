@@ -1,10 +1,11 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LandParcel, RegistrationStatus } from '../types';
+import { LandParcel, RegistrationStatus, UserRole } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
-import { Loader, User, MapPin, Scale, FileText, ArrowLeft } from 'lucide-react';
+import { Loader, User, MapPin, Scale, FileText, ArrowLeft, PlusCircle } from 'lucide-react';
+import Button from './ui/Button';
+import { AuthContext } from '../context/AuthContext';
 
 const StatusBadge = ({ status }: { status: RegistrationStatus }) => {
     const baseClasses = "px-3 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full";
@@ -27,8 +28,24 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: stri
 );
 
 const RegistrationDetails: React.FC = () => {
+    const { user } = useContext(AuthContext);
     const { id } = useParams<{ id: string }>();
     const [parcel, setParcel] = useState<LandParcel | null>(null);
+    const [newStatus, setNewStatus] = useState<RegistrationStatus>(RegistrationStatus.Pending);
+    const [notes, setNotes] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const handleUpdateStatus = async () => {
+        if (id && notes) {
+            setIsUpdating(true);
+            const updatedParcel = await LandRegistryService.updateParcelStatus(id, newStatus, notes);
+            if (updatedParcel) {
+                setParcel(updatedParcel);
+                setNotes('');
+            }
+            setIsUpdating(false);
+        }
+    };
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -98,6 +115,22 @@ const RegistrationDetails: React.FC = () => {
                     </div>
                 </div>
             </Card>
+
+            {user && (user.role === UserRole.Admin || user.role === UserRole.Head) && (
+                <Card title="Update Status">
+                    <div className="p-4">
+                        <div className="flex items-center space-x-4">
+                            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as RegistrationStatus)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                {Object.values(RegistrationStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes..." className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"></textarea>
+                            <Button onClick={handleUpdateStatus} disabled={isUpdating}>
+                                <PlusCircle className="h-5 w-5 mr-2"/> {isUpdating ? 'Updating...' : 'Add Status'}
+                            </Button>
+                        </div>
+                    </div>
+                </Card>
+            )}
 
             <Card title="Status History">
                 <div className="relative p-4">

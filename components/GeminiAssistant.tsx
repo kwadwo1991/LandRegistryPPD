@@ -1,10 +1,11 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { MessageSquare, X, Send, Bot, User, Loader } from 'lucide-react';
 import { getGeminiResponse } from '../services/geminiService';
 import { ChatMessage } from '../types';
 
 const GeminiAssistant: React.FC = () => {
+    const { user } = useContext(AuthContext);
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -17,6 +18,13 @@ const GeminiAssistant: React.FC = () => {
 
     useEffect(scrollToBottom, [messages]);
 
+    useEffect(() => {
+        if (isOpen && messages.length === 0) {
+            const greeting = `Hello ${user?.username || 'user'}, I am your land registration assistant. How can I help you today?`;
+            setMessages([{ role: 'model', text: greeting }]);
+        }
+    }, [isOpen, user, messages.length]);
+
     const handleSend = async () => {
         if (input.trim() === '' || isLoading) return;
 
@@ -26,7 +34,7 @@ const GeminiAssistant: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const responseText = await getGeminiResponse(messages, input);
+            const responseText = await getGeminiResponse(messages, input, user?.role);
             const modelMessage: ChatMessage = { role: 'model', text: responseText };
             setMessages(prev => [...prev, modelMessage]);
         } catch (error) {

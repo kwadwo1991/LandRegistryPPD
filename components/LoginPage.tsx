@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { AuthContext } from '../App';
+import { AuthContext } from '../context/AuthContext';
 import * as authService from '../services/authService';
 import { UserRole } from '../types';
 import classnames from 'classnames';
@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
     const credentials = isStaff ? role : password;
     const user = await authService.login(username, credentials, isStaff);
     if (user) {
-      login({ role: user.role, username: isStaff ? undefined : username });
+      login(user);
     } else {
       setError('Invalid credentials');
     }

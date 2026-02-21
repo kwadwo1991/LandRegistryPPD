@@ -1,18 +1,24 @@
 import { User, UserRole } from '../types';
 
-const mockUsers: (User & { id: number; active: boolean })[] = [
-  { id: 1, username: 'head_of_dept', role: UserRole.Head, active: true },
-  { id: 2, username: 'deo_officer', role: UserRole.DateEntryOfficer, active: true },
-  { id: 3, username: 'secretary_staff', role: UserRole.Secretary, active: false },
-  { id: 4, username: 'staff_member', role: UserRole.Staff, active: true },
+export interface ManagedUser extends User {
+  id: string;
+  active: boolean;
+  password?: string;
+}
+
+export const mockUsers: ManagedUser[] = [
+  { id: '1', username: 'head_of_dept', role: UserRole.Head, active: true, password: 'password123', email: 'head@example.com', contact: '1234567890' },
+  { id: '2', username: 'deo_officer', role: UserRole.DateEntryOfficer, active: true },
+  { id: '3', username: 'secretary_staff', role: UserRole.Secretary, active: false },
+  { id: '4', username: 'staff_member', role: UserRole.Staff, active: true },
 ];
 
 export const UserService = {
-  getUsers: async (): Promise<(User & { id: number; active: boolean })[]> => {
+  getUsers: async (): Promise<ManagedUser[]> => {
     return [...mockUsers];
   },
 
-  updateUserStatus: async (userId: number, active: boolean): Promise<boolean> => {
+  updateUserStatus: async (userId: string, active: boolean): Promise<boolean> => {
     const user = mockUsers.find(u => u.id === userId);
     if (user) {
       user.active = active;
@@ -21,7 +27,7 @@ export const UserService = {
     return false;
   },
 
-  updateUserRole: async (userId: number, role: UserRole): Promise<boolean> => {
+  updateUserRole: async (userId: string, role: UserRole): Promise<boolean> => {
     const user = mockUsers.find(u => u.id === userId);
     if (user) {
       user.role = role;
@@ -30,9 +36,9 @@ export const UserService = {
     return false;
   },
 
-  createUser: async (userData: Omit<User, 'username'> & { username: string; password?: string }, createdByAdmin: boolean = false): Promise<User & { id: number; active: boolean }> => {
-    const newUser = {
-      id: mockUsers.length + 1,
+  createUser: async (userData: Omit<User, 'username'> & { username: string; password?: string }, createdByAdmin: boolean = false): Promise<ManagedUser> => {
+    const newUser: ManagedUser = {
+      id: (mockUsers.length + 1).toString(),
       ...userData,
       active: createdByAdmin, // Accounts created by admin are active by default
     };

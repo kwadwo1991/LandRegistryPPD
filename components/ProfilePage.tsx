@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { AuthContext } from '../App';
+import { AuthContext } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Label from './ui/Label';
@@ -27,7 +28,10 @@ const ProfilePage: React.FC = () => {
             <Label htmlFor="password">New Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current password" />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <Link to="/reset-password">
+              <Button variant="outline">Reset Password</Button>
+            </Link>
             <Button type="submit">Update Profile</Button>
           </div>
         </form>

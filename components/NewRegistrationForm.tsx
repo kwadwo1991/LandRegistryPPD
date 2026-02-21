@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Applicant, LandParcel } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
@@ -8,11 +7,14 @@ import Button from './ui/Button';
 import Label from './ui/Label';
 import Input from './ui/Input';
 import Card from './ui/Card';
-import { UploadCloud, CheckCircle } from 'lucide-react';
+import { UploadCloud, File as FileIcon, X } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { AuthContext } from '../context/AuthContext';
 
 const steps = ['Applicant Details', 'Land Parcel Details', 'Document Upload', 'Review & Submit'];
 
 const NewRegistrationForm: React.FC = () => {
+  const { user } = useContext(AuthContext);
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
 
@@ -24,6 +26,20 @@ const NewRegistrationForm: React.FC = () => {
     latitude: '', longitude: '', sizeAcres: 0, landUse: 'Residential' as LandParcel['landUse'],
   });
   const [documents, setDocuments] = useState<File[]>([]);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      setDocuments(prev => [...prev, ...acceptedFiles]);
+    },
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+    }
+  });
+
+  const removeFile = (file: File) => {
+    setDocuments(prev => prev.filter(f => f !== file));
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleApplicantChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -54,12 +70,6 @@ const NewRegistrationForm: React.FC = () => {
     setLandDetails({ ...landDetails, [e.target.name]: e.target.value });
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-        setDocuments(prev => [...prev, ...Array.from(e.target.files as FileList)]);
-    }
-  };
-
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0));
 
@@ -78,6 +88,7 @@ const NewRegistrationForm: React.FC = () => {
         sizeAcres: Number(landDetails.sizeAcres),
         landUse: landDetails.landUse,
         documents: mockDocs,
+        submittedBy: user?.username,
     };
 
     try {
@@ -133,14 +144,14 @@ const NewRegistrationForm: React.FC = () => {
 
         {currentStep === 2 && (
             <div>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div {...getRootProps()} className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md ${isDragActive ? 'border-green-500 bg-green-50' : ''}`}>
+                    <input {...getInputProps()} />
                     <div className="space-y-1 text-center">
                         <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                         <div className="flex text-sm text-gray-600">
-                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                            <p className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none">
                                 <span>Upload files</span>
-                                <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} />
-                            </label>
+                            </p>
                             <p className="pl-1">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">PDF, PNG, JPG up to 10MB</p>
@@ -148,10 +159,19 @@ const NewRegistrationForm: React.FC = () => {
                 </div>
                 <div className="mt-4">
                     <h4 className="font-medium text-gray-700">Uploaded Files:</h4>
-                    <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
+                    <ul className="mt-2 space-y-2">
                         {documents.length > 0 ? documents.map((file, index) => (
-                            <li key={index} className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2"/>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</li>
-                        )) : (<li>No files uploaded.</li>)}
+                            <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                                <div className="flex items-center">
+                                    <FileIcon className="h-5 w-5 text-gray-500 mr-2"/>
+                                    <span className="text-sm text-gray-800">{file.name}</span>
+                                    <span className="text-xs text-gray-500 ml-2">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                                </div>
+                                <button onClick={() => removeFile(file)} className="text-red-500 hover:text-red-700">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </li>
+                        )) : (<li className="text-sm text-gray-500">No files uploaded.</li>)}
                     </ul>
                 </div>
             </div>

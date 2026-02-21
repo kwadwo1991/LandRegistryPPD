@@ -94,7 +94,7 @@ export const LandRegistryService = {
     return mockParcels.find(p => p.id === id);
   },
 
-  addParcel: async (parcelData: Omit<LandParcel, 'id' | 'submissionDate' | 'status' | 'statusHistory'>): Promise<LandParcel> => {
+  addParcel: async (parcelData: Omit<LandParcel, 'id' | 'submissionDate' | 'status' | 'statusHistory' | 'submittedBy'> & { submittedBy?: string }): Promise<LandParcel> => {
     await simulateDelay(1000);
     const newIdNumber = (mockParcels.length + 1).toString().padStart(3, '0');
     const newParcel: LandParcel = {
@@ -103,8 +103,24 @@ export const LandRegistryService = {
       submissionDate: new Date().toISOString(),
       status: RegistrationStatus.Pending,
       statusHistory: [{ status: RegistrationStatus.Pending, date: new Date().toLocaleDateString('en-CA'), notes: 'Application submitted successfully.' }],
+      submittedBy: parcelData.submittedBy,
     };
     mockParcels.unshift(newParcel);
     return newParcel;
+  },
+
+  updateParcelStatus: async (id: string, status: RegistrationStatus, notes: string): Promise<LandParcel | undefined> => {
+    await simulateDelay(500);
+    const parcel = mockParcels.find(p => p.id === id);
+    if (parcel) {
+      parcel.status = status;
+      parcel.statusHistory.unshift({
+        status,
+        date: new Date().toLocaleDateString('en-CA'),
+        notes
+      });
+      return { ...parcel };
+    }
+    return undefined;
   },
 };

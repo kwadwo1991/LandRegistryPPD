@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LandParcel, RegistrationStatus } from '../types';
+import { LandParcel, RegistrationStatus, UserRole } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
 import Input from './ui/Input';
 import { Loader, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 
 const StatusBadge = ({ status }: { status: RegistrationStatus }) => {
     const baseClasses = "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full";
@@ -18,14 +18,13 @@ const StatusBadge = ({ status }: { status: RegistrationStatus }) => {
     return <span className={`${baseClasses} ${statusClasses[status]}`}>{status}</span>;
 };
 
-// FIX: Define a type for all sortable keys to fix type error and improve maintainability.
-type SortableKey = keyof LandParcel | 'applicant.fullName' | 'location.town';
+type SortableKey = keyof LandParcel | 'applicant.fullName' | 'location.town' | 'submissionDate';
 
 const RegistrationList: React.FC = () => {
+    const { user } = useContext(AuthContext);
     const [parcels, setParcels] = useState<LandParcel[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    // FIX: Use the new SortableKey type for sortConfig state.
     const [sortConfig, setSortConfig] = useState<{ key: SortableKey, direction: 'ascending' | 'descending' } | null>(null);
     const navigate = useNavigate();
 
@@ -40,19 +39,23 @@ const RegistrationList: React.FC = () => {
     }, []);
 
     const filteredParcels = useMemo(() => {
-        return parcels.filter(parcel =>
+        let roleFilteredParcels = parcels;
+        if (user && user.role !== UserRole.Admin && user.role !== UserRole.Head) {
+            roleFilteredParcels = parcels.filter(p => p.submittedBy === user.username);
+        }
+
+        return roleFilteredParcels.filter(parcel =>
             parcel.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             parcel.applicant.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             parcel.location.town.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [parcels, searchTerm]);
+    }, [parcels, searchTerm, user]);
     
     const sortedParcels = useMemo(() => {
         const sortableItems = [...filteredParcels];
         if (sortConfig !== null) {
             sortableItems.sort((a, b) => {
-                let aValue, bValue;
-                // FIX: Update sorting logic to handle nested properties 'applicant.fullName' and 'location.town'.
+                let aValue: string | number | undefined, bValue: string | number | undefined;
                 if (sortConfig.key === 'applicant.fullName') {
                     aValue = a.applicant.fullName;
                     bValue = b.applicant.fullName;
@@ -63,6 +66,9 @@ const RegistrationList: React.FC = () => {
                     aValue = a[sortConfig.key as keyof LandParcel];
                     bValue = b[sortConfig.key as keyof LandParcel];
                 }
+
+                if (aValue === undefined) return 1;
+                if (bValue === undefined) return -1;
 
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
@@ -76,7 +82,6 @@ const RegistrationList: React.FC = () => {
         return sortableItems;
     }, [filteredParcels, sortConfig]);
 
-    // FIX: Use SortableKey for the key parameter.
     const requestSort = (key: SortableKey) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -85,7 +90,6 @@ const RegistrationList: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    // FIX: Use SortableKey for the sortKey prop.
     const SortableHeader = ({ label, sortKey }: { label: string, sortKey: SortableKey }) => (
         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(sortKey)}>
             <div className="flex items-center">
@@ -98,6 +102,8 @@ const RegistrationList: React.FC = () => {
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader className="animate-spin h-8 w-8 text-green-700" /></div>;
     }
+
+    const isAdmin = user?.role === UserRole.Admin || user?.role === UserRole.Head;
 
     return (
         <Card>
@@ -122,6 +128,8 @@ const RegistrationList: React.FC = () => {
                             <SortableHeader label="Location" sortKey="location.town" />
                             <SortableHeader label="Size (Acres)" sortKey="sizeAcres" />
                             <SortableHeader label="Status" sortKey="status" />
+                            {isAdmin && <SortableHeader label="Submitted By" sortKey="submittedBy" />}
+                            <SortableHeader label="Submission Date" sortKey="submissionDate" />
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -132,6 +140,8 @@ const RegistrationList: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.location.town}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.sizeAcres}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={parcel.status} /></td>
+                                {isAdmin && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.submittedBy || 'System'}</td>}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(parcel.submissionDate).toLocaleDateString()}</td>
                             </tr>
                         ))}
                     </tbody>

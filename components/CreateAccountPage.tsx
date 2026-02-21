@@ -6,23 +6,36 @@ import Button from './ui/Button';
 import Label from './ui/Label';
 import Input from './ui/Input';
 // We will create this service function in the next step
-// import { UserService } from '../services/userService';
+import { UserService } from '../services/userService';
 
 const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(UserRole.Staff);
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [contact, setContact] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
+  const [office, setOffice] = useState<'Akrofrom' | 'Offuman' | 'Tuobodom'>('Akrofrom');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleCreateAccount = async () => {
     setError('');
     setSuccess('');
+
+    if (!email.toLowerCase().endsWith('@tenda.gov.gh')) {
+      setError('Registration is restricted to @tenda.gov.gh email addresses.');
+      return;
+    }
+
     try {
       // This is a placeholder. We will implement the actual service call later.
-      // await UserService.createUser({ username, password, role }); 
-      console.log('User created:', { username, password, role });
+      await UserService.createUser({ username, password, role, firstName, middleName, lastName, contact, whatsapp, email, office }); 
+      console.log('User created:', { username, password, role, firstName, middleName, lastName, contact, whatsapp, email, office });
       setSuccess('Account created successfully! An administrator will review and activate your account shortly.');
       setTimeout(() => navigate('/login'), 5000);
     } catch (err) {
@@ -43,9 +56,43 @@ const CreateAccountPage: React.FC = () => {
                 <Label htmlFor="username">Username</Label>
                 <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="middleName">Middle Name</Label>
+                  <Input id="middleName" type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="contact">Contact</Label>
+                  <Input id="contact" type="text" value={contact} onChange={(e) => setContact(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input id="whatsapp" type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required pattern=".*@tenda\.gov\.gh$" title="Email must be a tenda.gov.gh address" />
+                </div>
+              </div>
               <div className="mb-4">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
+              <div className="mb-6">
+                <Label htmlFor="office">Office</Label>
+                <select id="office" value={office} onChange={(e) => setOffice(e.target.value as 'Akrofrom' | 'Offuman' | 'Tuobodom')} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  <option>Akrofrom</option>
+                  <option>Offuman</option>
+                  <option>Tuobodom</option>
+                </select>
               </div>
               <div className="mb-6">
                 <Label htmlFor="role">Select Your Role</Label>

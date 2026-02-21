@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { LandParcel, RegistrationStatus } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
@@ -22,18 +23,22 @@ const StatCard = ({ title, value, icon, colorClass }: { title: string; value: nu
 );
 
 const Dashboard: React.FC = () => {
+    const { user } = useContext(AuthContext);
     const [parcels, setParcels] = useState<LandParcel[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const data = await LandRegistryService.getParcels();
+            let data = await LandRegistryService.getParcels();
+            if (user && user.role !== 'Admin' && user.role !== 'Head') {
+                data = data.filter(p => p.submittedBy === user.username);
+            }
             setParcels(data);
             setLoading(false);
         };
         fetchData();
-    }, []);
+    }, [user]);
 
     const stats = {
         total: parcels.length,
@@ -58,7 +63,10 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+                {user && <p className="text-lg text-gray-600">Welcome, <span className="font-semibold">{user.username}</span> ({user.role})</p>}
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Registrations" value={stats.total} icon={<FileCheck2 className="h-6 w-6 text-white"/>} colorClass="bg-blue-500" />

@@ -10,6 +10,13 @@ export enum UserRole {
 export interface User {
   username?: string;
   role: UserRole;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  contact?: string;
+  whatsapp?: string;
+  email?: string;
+  office?: 'Akrofrom' | 'Offuman' | 'Tuobodom';
 }
 
 export enum RegistrationStatus {
@@ -53,6 +60,7 @@ export interface LandParcel {
   submissionDate: string;
   documents: DocumentFile[];
   statusHistory: { status: RegistrationStatus; date: string; notes: string }[];
+  submittedBy?: string;
 }
 
 export interface ChatMessage {
