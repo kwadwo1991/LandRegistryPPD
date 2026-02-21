@@ -1,9 +1,10 @@
 
-import { LandParcel, RegistrationStatus } from '../types';
+import { LandParcel, RegistrationStatus, RegistrationType } from '../types';
 
 const mockParcels: LandParcel[] = [
   {
-    id: 'TND-2024-001',
+    id: 'LND-2024-001',
+    type: RegistrationType.Land,
     applicant: {
       fullName: 'Ama Serwaa',
       address: 'P.O. Box 123, Tuobodom',
@@ -29,7 +30,8 @@ const mockParcels: LandParcel[] = [
     ],
   },
   {
-    id: 'TND-2024-002',
+    id: 'DEV-2024-001',
+    type: RegistrationType.Development,
     applicant: {
       fullName: 'Kwabena Asante',
       address: 'H/No. 45, Offinso Road, Tanoso',
@@ -44,17 +46,21 @@ const mockParcels: LandParcel[] = [
       town: 'Tanoso',
       gpsCoordinates: { latitude: '7.5999', longitude: '-1.9555' },
     },
-    sizeAcres: 0.8,
-    landUse: 'Residential',
+    permitDetails: {
+      proposedStructure: '2-Storey Residential Building',
+      estimatedCost: 250000,
+      architectName: 'Isaac Mensah',
+    },
     status: RegistrationStatus.Pending,
     submissionDate: '2024-06-28T14:00:00Z',
-    documents: [{ name: 'Indenture_002.pdf', size: 2500000, type: 'application/pdf', url: '#' }],
+    documents: [{ name: 'Architectural_Drawings.pdf', size: 2500000, type: 'application/pdf', url: '#' }],
     statusHistory: [
         { status: RegistrationStatus.Pending, date: '2024-06-28', notes: 'Application submitted, pending review by surveyor.' },
     ],
   },
     {
-    id: 'TND-2024-003',
+    id: 'BLD-2024-001',
+    type: RegistrationType.Building,
     applicant: {
       fullName: 'Yaa Dufie',
       address: 'Plot 7, Krobo',
@@ -69,11 +75,14 @@ const mockParcels: LandParcel[] = [
       town: 'Krobo',
       gpsCoordinates: { latitude: '7.6123', longitude: '-1.9432' },
     },
-    sizeAcres: 5.0,
-    landUse: 'Commercial',
+    permitDetails: {
+      proposedStructure: 'Commercial Warehouse',
+      estimatedCost: 500000,
+      contractorName: 'BuildRight Construction',
+    },
     status: RegistrationStatus.Queried,
     submissionDate: '2024-06-10T09:00:00Z',
-    documents: [{ name: 'Site_Plan_003.pdf', size: 1800000, type: 'application/pdf', url: '#' }],
+    documents: [{ name: 'Structural_Plan.pdf', size: 1800000, type: 'application/pdf', url: '#' }],
     statusHistory: [
         { status: RegistrationStatus.Queried, date: '2024-07-05', notes: 'Inconsistent boundary markers in site plan. Awaiting revised document.' },
         { status: RegistrationStatus.Pending, date: '2024-06-10', notes: 'Application submitted.' },
@@ -96,10 +105,13 @@ export const LandRegistryService = {
 
   addParcel: async (parcelData: Omit<LandParcel, 'id' | 'submissionDate' | 'status' | 'statusHistory' | 'submittedBy'> & { submittedBy?: string }): Promise<LandParcel> => {
     await simulateDelay(1000);
-    const newIdNumber = (mockParcels.length + 1).toString().padStart(3, '0');
+    const prefix = parcelData.type === RegistrationType.Land ? 'LND' : parcelData.type === RegistrationType.Development ? 'DEV' : 'BLD';
+    const typeCount = mockParcels.filter(p => p.type === parcelData.type).length;
+    const newIdNumber = (typeCount + 1).toString().padStart(3, '0');
+    const currentYear = new Date().getFullYear();
     const newParcel: LandParcel = {
       ...parcelData,
-      id: `TND-2024-${newIdNumber}`,
+      id: `${prefix}-${currentYear}-${newIdNumber}`,
       submissionDate: new Date().toISOString(),
       status: RegistrationStatus.Pending,
       statusHistory: [{ status: RegistrationStatus.Pending, date: new Date().toLocaleDateString('en-CA'), notes: 'Application submitted successfully.' }],
@@ -122,5 +134,15 @@ export const LandRegistryService = {
       return { ...parcel };
     }
     return undefined;
+  },
+
+  deleteParcel: async (id: string): Promise<boolean> => {
+    await simulateDelay(500);
+    const index = mockParcels.findIndex(p => p.id === id);
+    if (index !== -1) {
+      mockParcels.splice(index, 1);
+      return true;
+    }
+    return false;
   },
 };

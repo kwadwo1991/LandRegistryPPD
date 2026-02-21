@@ -42,8 +42,15 @@ export interface DocumentFile {
   url: string; // mock url
 }
 
-export interface LandParcel {
+export enum RegistrationType {
+  Land = 'Land Registration',
+  Development = 'Development Permit',
+  Building = 'Building Permit',
+}
+
+export interface RegistrationRecord {
   id: string;
+  type: RegistrationType;
   applicant: Applicant;
   location: {
     region: string;
@@ -54,14 +61,26 @@ export interface LandParcel {
       longitude: string;
     };
   };
-  sizeAcres: number;
-  landUse: 'Residential' | 'Commercial' | 'Agricultural' | 'Industrial' | 'Mixed-Use';
+  sizeAcres?: number;
+  landUse?: 'Residential' | 'Commercial' | 'Agricultural' | 'Industrial' | 'Mixed-Use';
+  permitDetails?: {
+    proposedStructure?: string;
+    estimatedCost?: number;
+    architectName?: string;
+    contractorName?: string;
+    numFloors?: number;
+    floorArea?: number;
+    developmentType?: string;
+    siteArea?: number;
+  };
   status: RegistrationStatus;
   submissionDate: string;
   documents: DocumentFile[];
   statusHistory: { status: RegistrationStatus; date: string; notes: string }[];
   submittedBy?: string;
 }
+
+export type LandParcel = RegistrationRecord;
 
 export interface ChatMessage {
     role: 'user' | 'model';

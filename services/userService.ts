@@ -46,4 +46,38 @@ export const UserService = {
     mockUsers.push(newUser);
     return newUser;
   },
+
+  updateUser: async (userId: string, userData: Partial<ManagedUser>): Promise<ManagedUser | undefined> => {
+    const index = mockUsers.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      mockUsers[index] = { ...mockUsers[index], ...userData };
+      return mockUsers[index];
+    }
+    return undefined;
+  },
+
+  deleteUser: async (userId: string): Promise<boolean> => {
+    const index = mockUsers.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      mockUsers.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
+  bulkUpdateStatus: async (userIds: string[], active: boolean): Promise<void> => {
+    userIds.forEach(id => {
+      const user = mockUsers.find(u => u.id === id);
+      if (user) user.active = active;
+    });
+  },
+
+  bulkDelete: async (userIds: string[]): Promise<void> => {
+    userIds.forEach(id => {
+      const index = mockUsers.findIndex(u => u.id === id);
+      if (index !== -1 && mockUsers[index].username !== 'admin') {
+        mockUsers.splice(index, 1);
+      }
+    });
+  },
 };

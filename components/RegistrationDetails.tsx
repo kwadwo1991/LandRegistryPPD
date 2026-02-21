@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LandParcel, RegistrationStatus, UserRole } from '../types';
+import { LandParcel, RegistrationStatus, UserRole, RegistrationType } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
 import { Loader, User, MapPin, Scale, FileText, ArrowLeft, PlusCircle } from 'lucide-react';
@@ -23,7 +23,7 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: stri
         <dt className="text-sm font-medium text-gray-500 flex items-center">
             {icon} <span className="ml-2">{label}</span>
         </dt>
-        <dd className="mt-1 text-sm text-gray-900">{value}</dd>
+        <dd className="mt-1 text-sm text-gray-900">{value || 'N/A'}</dd>
     </div>
 );
 
@@ -77,7 +77,12 @@ const RegistrationDetails: React.FC = () => {
             <Card>
                 <div className="p-4 border-b flex justify-between items-start">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Parcel ID: {parcel.id}</h2>
+                        <div className="flex items-center space-x-2">
+                          <h2 className="text-2xl font-bold text-gray-800">Reference ID: {parcel.id}</h2>
+                          <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${parcel.type === RegistrationType.Land ? 'bg-blue-100 text-blue-800' : parcel.type === RegistrationType.Development ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800'}`}>
+                            {parcel.type}
+                          </span>
+                        </div>
                         <p className="text-sm text-gray-500">Submitted on {new Date(parcel.submissionDate).toLocaleString()}</p>
                     </div>
                     <StatusBadge status={parcel.status} />
@@ -94,12 +99,33 @@ const RegistrationDetails: React.FC = () => {
                     </div>
 
                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-green-700"/>Land Parcel Details</h3>
+                        <h3 className="text-lg font-semibold text-gray-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-green-700"/>{parcel.type === RegistrationType.Land ? 'Land Parcel Details' : 'Project Details'}</h3>
                         <dl className="space-y-3">
                             <DetailItem icon={<></>} label="Location" value={`${parcel.location.town}, ${parcel.location.district}, ${parcel.location.region}`} />
                             <DetailItem icon={<></>} label="GPS Coordinates" value={`${parcel.location.gpsCoordinates.latitude}, ${parcel.location.gpsCoordinates.longitude}`} />
-                            <DetailItem icon={<Scale className="inline h-4 w-4"/>} label="Size" value={`${parcel.sizeAcres} acres`} />
-                            <DetailItem icon={<></>} label="Land Use" value={parcel.landUse} />
+                            {parcel.type === RegistrationType.Land ? (
+                              <>
+                                <DetailItem icon={<Scale className="inline h-4 w-4"/>} label="Size" value={`${parcel.sizeAcres} acres`} />
+                                <DetailItem icon={<></>} label="Land Use" value={parcel.landUse} />
+                              </>
+                            ) : parcel.type === RegistrationType.Building ? (
+                              <>
+                                <DetailItem icon={<></>} label="Proposed Structure" value={parcel.permitDetails?.proposedStructure} />
+                                <DetailItem icon={<></>} label="Estimated Cost" value={`GHS ${parcel.permitDetails?.estimatedCost?.toLocaleString()}`} />
+                                <DetailItem icon={<></>} label="Floors" value={parcel.permitDetails?.numFloors} />
+                                <DetailItem icon={<></>} label="Floor Area" value={`${parcel.permitDetails?.floorArea} sqm`} />
+                                {parcel.permitDetails?.architectName && <DetailItem icon={<></>} label="Architect" value={parcel.permitDetails.architectName} />}
+                                {parcel.permitDetails?.contractorName && <DetailItem icon={<></>} label="Contractor" value={parcel.permitDetails.contractorName} />}
+                              </>
+                            ) : (
+                              <>
+                                <DetailItem icon={<></>} label="Development Description" value={parcel.permitDetails?.proposedStructure} />
+                                <DetailItem icon={<></>} label="Estimated Cost" value={`GHS ${parcel.permitDetails?.estimatedCost?.toLocaleString()}`} />
+                                <DetailItem icon={<></>} label="Development Type" value={parcel.permitDetails?.developmentType} />
+                                <DetailItem icon={<></>} label="Site Area" value={`${parcel.permitDetails?.siteArea} sqm`} />
+                                {parcel.permitDetails?.contractorName && <DetailItem icon={<></>} label="Lead Consultant" value={parcel.permitDetails.contractorName} />}
+                              </>
+                            )}
                         </dl>
                     </div>
 
