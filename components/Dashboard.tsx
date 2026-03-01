@@ -82,8 +82,8 @@ const Dashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card title="Application Type Breakdown" className="lg:col-span-2">
-                     <div style={{ width: '100%', height: 300 }}>
-                        <ResponsiveContainer>
+                     <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
