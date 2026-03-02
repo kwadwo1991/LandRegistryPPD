@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { LandParcel, RegistrationStatus, RegistrationType } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
@@ -55,6 +55,27 @@ const Dashboard: React.FC = () => {
         { name: 'Development', count: stats.development },
         { name: 'Building', count: stats.building },
     ];
+
+    const statusData = [
+        { name: 'Approved', value: stats.approved, color: '#10b981' },
+        { name: 'Pending', value: stats.pending, color: '#f59e0b' },
+        { name: 'Queried', value: stats.queried, color: '#f97316' },
+        { name: 'Rejected', value: stats.rejected, color: '#ef4444' },
+    ];
+
+    const trendData = [
+        { month: 'Jan', applications: 12 },
+        { month: 'Feb', applications: 19 },
+        { month: 'Mar', applications: 15 },
+        { month: 'Apr', applications: 22 },
+        { month: 'May', applications: 30 },
+        { month: 'Jun', applications: stats.total },
+    ];
+
+    const userActivityData = Array.from(new Set(parcels.map(p => p.submittedBy || 'Anonymous'))).map(user => ({
+        name: user,
+        count: parcels.filter(p => (p.submittedBy || 'Anonymous') === user).length
+    })).slice(0, 5);
     
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader className="animate-spin h-8 w-8 text-green-700" /></div>;
@@ -80,6 +101,46 @@ const Dashboard: React.FC = () => {
                 <StatCard title="Approved" value={stats.approved} icon={<FileCheck2 className="h-6 w-6 text-white"/>} colorClass="bg-green-500" />
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card title="Application Trends (Last 6 Months)">
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={trendData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Line type="monotone" dataKey="applications" stroke="#15803d" strokeWidth={2} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+                <Card title="Status Distribution">
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {statusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card title="Application Type Breakdown" className="lg:col-span-2">
                      <div style={{ width: '100%', height: 300, minHeight: 300 }}>
@@ -95,24 +156,53 @@ const Dashboard: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
                 </Card>
-                <Card title="Recent Activities">
-                    <ul className="divide-y divide-gray-200">
-                        {parcels.slice(0, 5).map(p => (
-                            <li key={p.id} className="py-3">
-                                <p className="text-sm font-medium text-gray-800">
-                                    <Link to={`/registrations/${p.id}`} className="hover:text-green-700">
-                                      <span className="font-bold">[{p.type.split(' ')[0]}]</span> {p.id}
-                                    </Link>
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                    By {p.applicant.fullName} on {new Date(p.submissionDate).toLocaleDateString()}
-                                </p>
-                                <p className="text-xs mt-1"><span className={`px-2 py-0.5 rounded-full text-[10px] ${p.status === RegistrationStatus.Approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{p.status}</span></p>
-                            </li>
-                        ))}
-                    </ul>
+                <Card title="User Submission Activity">
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart layout="vertical" data={userActivityData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" />
+                                <YAxis dataKey="name" type="category" width={100} />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#0ea5e9" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </Card>
             </div>
+
+            <Card title="Recent Activities">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applicant</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {parcels.slice(0, 5).map(p => (
+                                <tr key={p.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
+                                        <Link to={`/registrations/${p.id}`}>{p.id}</Link>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.type}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.applicant.fullName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(p.submissionDate).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${p.status === RegistrationStatus.Approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                            {p.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
         </div>
     );
 };

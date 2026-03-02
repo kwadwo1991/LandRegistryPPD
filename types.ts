@@ -7,6 +7,15 @@ export enum UserRole {
   Staff = 'Staff',
 }
 
+export enum Permission {
+  CreateRegistration = 'create_registration',
+  EditRegistration = 'edit_registration',
+  DeleteRegistration = 'delete_registration',
+  ReviewRegistration = 'review_registration',
+  ManageUsers = 'manage_users',
+  ViewReports = 'view_reports',
+}
+
 export interface User {
   username?: string;
   role: UserRole;
@@ -17,6 +26,7 @@ export interface User {
   whatsapp?: string;
   email?: string;
   office?: 'Akrofrom' | 'Offuman' | 'Tuobodom';
+  status?: 'Active' | 'Inactive';
 }
 
 export enum RegistrationStatus {
@@ -48,6 +58,14 @@ export enum RegistrationType {
   Building = 'Building Permit',
 }
 
+export interface AuditLog {
+  id: string;
+  action: string;
+  performedBy: string;
+  timestamp: string;
+  details?: string;
+}
+
 export interface RegistrationRecord {
   id: string;
   type: RegistrationType;
@@ -77,6 +95,7 @@ export interface RegistrationRecord {
   submissionDate: string;
   documents: DocumentFile[];
   statusHistory: { status: RegistrationStatus; date: string; notes: string }[];
+  auditLogs: AuditLog[];
   submittedBy?: string;
 }
 

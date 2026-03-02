@@ -1,5 +1,10 @@
 
-import { LandParcel, RegistrationStatus, RegistrationType } from '../types';
+import { LandParcel, RegistrationStatus, RegistrationType, AuditLog } from '../types';
+
+const mockAuditLogs: AuditLog[] = [
+  { id: '1', action: 'Application Submitted', performedBy: 'Ama Serwaa', timestamp: '2024-05-15T10:30:00Z', details: 'Initial submission' },
+  { id: '2', action: 'Status Updated', performedBy: 'Admin', timestamp: '2024-06-20T11:00:00Z', details: 'Approved after verification' },
+];
 
 const mockParcels: LandParcel[] = [
   {
@@ -28,6 +33,7 @@ const mockParcels: LandParcel[] = [
         { status: RegistrationStatus.Approved, date: '2024-06-20', notes: 'All documents verified and approved.' },
         { status: RegistrationStatus.Pending, date: '2024-05-15', notes: 'Application submitted.' },
     ],
+    auditLogs: [...mockAuditLogs],
   },
   {
     id: 'DEV-2024-001',
@@ -57,6 +63,7 @@ const mockParcels: LandParcel[] = [
     statusHistory: [
         { status: RegistrationStatus.Pending, date: '2024-06-28', notes: 'Application submitted, pending review by surveyor.' },
     ],
+    auditLogs: [{ id: '3', action: 'Application Submitted', performedBy: 'Kwabena Asante', timestamp: '2024-06-28T14:00:00Z', details: 'Initial submission' }],
   },
     {
     id: 'BLD-2024-001',
@@ -87,6 +94,7 @@ const mockParcels: LandParcel[] = [
         { status: RegistrationStatus.Queried, date: '2024-07-05', notes: 'Inconsistent boundary markers in site plan. Awaiting revised document.' },
         { status: RegistrationStatus.Pending, date: '2024-06-10', notes: 'Application submitted.' },
     ],
+    auditLogs: [{ id: '4', action: 'Application Submitted', performedBy: 'Yaa Dufie', timestamp: '2024-06-10T09:00:00Z', details: 'Initial submission' }],
   },
 ];
 
@@ -103,7 +111,7 @@ export const LandRegistryService = {
     return mockParcels.find(p => p.id === id);
   },
 
-  addParcel: async (parcelData: Omit<LandParcel, 'id' | 'submissionDate' | 'status' | 'statusHistory' | 'submittedBy'> & { submittedBy?: string }): Promise<LandParcel> => {
+  addParcel: async (parcelData: Omit<LandParcel, 'id' | 'submissionDate' | 'status' | 'statusHistory' | 'auditLogs' | 'submittedBy'> & { submittedBy?: string }): Promise<LandParcel> => {
     await simulateDelay(1000);
     const prefix = parcelData.type === RegistrationType.Land ? 'LND' : parcelData.type === RegistrationType.Development ? 'DEV' : 'BLD';
     const typeCount = mockParcels.filter(p => p.type === parcelData.type).length;
@@ -115,13 +123,14 @@ export const LandRegistryService = {
       submissionDate: new Date().toISOString(),
       status: RegistrationStatus.Pending,
       statusHistory: [{ status: RegistrationStatus.Pending, date: new Date().toLocaleDateString('en-CA'), notes: 'Application submitted successfully.' }],
+      auditLogs: [{ id: Date.now().toString(), action: 'Application Submitted', performedBy: parcelData.submittedBy || 'Applicant', timestamp: new Date().toISOString(), details: 'Initial submission' }],
       submittedBy: parcelData.submittedBy,
     };
     mockParcels.unshift(newParcel);
     return newParcel;
   },
 
-  updateParcelStatus: async (id: string, status: RegistrationStatus, notes: string): Promise<LandParcel | undefined> => {
+  updateParcelStatus: async (id: string, status: RegistrationStatus, notes: string, performedBy: string): Promise<LandParcel | undefined> => {
     await simulateDelay(500);
     const parcel = mockParcels.find(p => p.id === id);
     if (parcel) {
@@ -131,7 +140,36 @@ export const LandRegistryService = {
         date: new Date().toLocaleDateString('en-CA'),
         notes
       });
+      parcel.auditLogs.unshift({
+        id: Date.now().toString(),
+        action: 'Status Updated',
+        performedBy,
+        timestamp: new Date().toISOString(),
+        details: `Status changed to ${status}. Notes: ${notes}`
+      });
+      
+      // Mock email notification
+      console.log(`Email sent to ${parcel.applicant.email}: Your application ${parcel.id} status is now ${status}.`);
+      
       return { ...parcel };
+    }
+    return undefined;
+  },
+
+  updateParcel: async (id: string, updatedData: Partial<LandParcel>, performedBy: string): Promise<LandParcel | undefined> => {
+    await simulateDelay(500);
+    const index = mockParcels.findIndex(p => p.id === id);
+    if (index !== -1) {
+      const oldParcel = mockParcels[index];
+      mockParcels[index] = { ...oldParcel, ...updatedData };
+      mockParcels[index].auditLogs.unshift({
+        id: Date.now().toString(),
+        action: 'Application Edited',
+        performedBy,
+        timestamp: new Date().toISOString(),
+        details: 'Record details updated via Admin CMS'
+      });
+      return { ...mockParcels[index] };
     }
     return undefined;
   },

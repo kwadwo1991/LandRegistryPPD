@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LandParcel, RegistrationStatus, UserRole, RegistrationType } from '../types';
+import { LandParcel, RegistrationStatus, UserRole, RegistrationType, Permission } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
-import { Loader, User, MapPin, Scale, FileText, ArrowLeft, PlusCircle } from 'lucide-react';
+import { Loader, User, MapPin, Scale, FileText, ArrowLeft, PlusCircle, Edit } from 'lucide-react';
 import Button from './ui/Button';
 import { AuthContext } from '../context/AuthContext';
+import { hasPermission } from '../App';
 
 const StatusBadge = ({ status }: { status: RegistrationStatus }) => {
     const baseClasses = "px-3 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full";
@@ -36,9 +37,9 @@ const RegistrationDetails: React.FC = () => {
     const [isUpdating, setIsUpdating] = useState(false);
 
     const handleUpdateStatus = async () => {
-        if (id && notes) {
+        if (id && notes && user) {
             setIsUpdating(true);
-            const updatedParcel = await LandRegistryService.updateParcelStatus(id, newStatus, notes);
+            const updatedParcel = await LandRegistryService.updateParcelStatus(id, newStatus, notes, user.username || user.role);
             if (updatedParcel) {
                 setParcel(updatedParcel);
                 setNotes('');
@@ -70,10 +71,19 @@ const RegistrationDetails: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <Link to="/registrations" className="flex items-center text-sm font-medium text-green-700 hover:text-green-900">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to List
-            </Link>
+            <div className="flex justify-between items-center">
+                <Link to="/registrations" className="flex items-center text-sm font-medium text-green-700 hover:text-green-900">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to List
+                </Link>
+                {hasPermission(user, Permission.EditRegistration) && (
+                    <Link to={`/admin/edit-registration/${parcel.id}`}>
+                        <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4 mr-2" /> Edit Application
+                        </Button>
+                    </Link>
+                )}
+            </div>
             <Card>
                 <div className="p-4 border-b flex justify-between items-start">
                     <div>
@@ -169,6 +179,33 @@ const RegistrationDetails: React.FC = () => {
                       <p className="text-base font-normal text-gray-500">{history.notes}</p>
                     </div>
                   ))}
+                </div>
+            </Card>
+
+            <Card title="Audit Trail">
+                <div className="p-4">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performed By</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {parcel.auditLogs.map((log) => (
+                                    <tr key={log.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{log.action}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.performedBy}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(log.timestamp).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">{log.details}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </Card>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Applicant, LandParcel, RegistrationType } from '../types';
+import { Applicant, LandParcel, RegistrationType, Permission } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Stepper from './ui/Stepper';
 import Button from './ui/Button';
@@ -10,6 +10,7 @@ import Card from './ui/Card';
 import { UploadCloud, File as FileIcon, X } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { AuthContext } from '../context/AuthContext';
+import { hasPermission } from '../App';
 
 const steps = ['Application Type', 'Applicant Details', 'Project Details', 'Document Upload', 'Review & Submit'];
 
@@ -83,6 +84,10 @@ const NewRegistrationForm: React.FC = () => {
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0));
 
   const handleSubmit = async () => {
+    if (!hasPermission(user, Permission.CreateRegistration)) {
+      alert("You do not have permission to submit new applications.");
+      return;
+    }
     setIsSubmitting(true);
     const mockDocs = documents.map(d => ({ name: d.name, size: d.size, type: d.type, url: '#' }));
     

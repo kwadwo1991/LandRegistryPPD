@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../../types';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { UserRole, Permission } from '../../types';
 import { UserService, ManagedUser } from '../../services/userService';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { Edit, Trash2, Filter, CheckSquare, Square } from 'lucide-react';
+import { AuthContext } from '../../context/AuthContext';
+import { hasPermission } from '../../App';
 
 const UserManagement: React.FC = () => {
-  
+  const { user: currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -15,12 +17,17 @@ const UserManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
   useEffect(() => {
+    if (!hasPermission(currentUser, Permission.ManageUsers)) return;
     const fetchUsers = async () => {
       const data = await UserService.getUsers();
       setUsers(data);
     };
     fetchUsers();
-  }, []);
+  }, [currentUser]);
+
+  if (!hasPermission(currentUser, Permission.ManageUsers)) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
@@ -109,10 +116,20 @@ const UserManagement: React.FC = () => {
           </div>
           <div className="flex space-x-2">
             {selectedUserIds.length > 0 && (
-              <>
-                <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={handleBulkDeactivate}>Deactivate ({selectedUserIds.length})</Button>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={handleBulkDelete}>Delete ({selectedUserIds.length})</Button>
-              </>
+              <div className="relative inline-block text-left">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value === 'deactivate') handleBulkDeactivate();
+                    if (e.target.value === 'delete') handleBulkDelete();
+                    e.target.value = '';
+                  }}
+                  className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md bg-white text-gray-700"
+                >
+                  <option value="">Bulk Actions ({selectedUserIds.length})</option>
+                  <option value="deactivate">Deactivate Selected</option>
+                  <option value="delete">Delete Selected</option>
+                </select>
+              </div>
             )}
             <Button onClick={() => navigate('/admin/create-user')}>Create User</Button>
           </div>

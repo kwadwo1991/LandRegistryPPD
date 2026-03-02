@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LandParcel, RegistrationStatus, UserRole, RegistrationType } from '../types';
+import { LandParcel, RegistrationStatus, UserRole, RegistrationType, Permission } from '../types';
 import { LandRegistryService } from '../services/landRegistryService';
 import Card from './ui/Card';
 import Input from './ui/Input';
 import { Loader, Search, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import Button from './ui/Button';
+import { hasPermission } from '../App';
 
 const StatusBadge = ({ status }: { status: RegistrationStatus }) => {
     const baseClasses = "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full";
@@ -114,7 +115,8 @@ const RegistrationList: React.FC = () => {
         return <div className="flex justify-center items-center h-full"><Loader className="animate-spin h-8 w-8 text-green-700" /></div>;
     }
 
-    const isAdmin = user?.role === UserRole.Admin || user?.role === UserRole.Head;
+    const canDelete = hasPermission(user, Permission.DeleteRegistration);
+    const canViewReports = hasPermission(user, Permission.ViewReports);
 
     return (
         <Card>
@@ -139,9 +141,9 @@ const RegistrationList: React.FC = () => {
                             <SortableHeader label="Applicant Name" sortKey="applicant.fullName" />
                             <SortableHeader label="Location" sortKey="location.town" />
                             <SortableHeader label="Status" sortKey="status" />
-                            {isAdmin && <SortableHeader label="Submitted By" sortKey="submittedBy" />}
+                            {canViewReports && <SortableHeader label="Submitted By" sortKey="submittedBy" />}
                             <SortableHeader label="Submission Date" sortKey="submissionDate" />
-                            {isAdmin && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>}
+                            {canDelete && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>}
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -156,9 +158,9 @@ const RegistrationList: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{parcel.applicant.fullName}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.location.town}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={parcel.status} /></td>
-                                {isAdmin && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.submittedBy || 'System'}</td>}
+                                {canViewReports && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parcel.submittedBy || 'System'}</td>}
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(parcel.submissionDate).toLocaleDateString()}</td>
-                                {isAdmin && (
+                                {canDelete && (
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <Button variant="icon" size="sm" className="text-red-600 hover:text-red-800" onClick={(e) => handleDelete(e, parcel.id)}>
                                             <Trash2 className="h-4 w-4" />

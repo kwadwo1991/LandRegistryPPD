@@ -17,6 +17,43 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ProfilePage from './components/ProfilePage';
 import CreateAccountPage from './components/CreateAccountPage';
+import EditRegistrationForm from './components/admin/EditRegistrationForm';
+import AdminDashboard from './components/admin/AdminDashboard';
+import { Permission, UserRole } from './types';
+
+export const hasPermission = (user: { role: UserRole } | null, permission: Permission): boolean => {
+  if (!user) return false;
+  
+  const rolePermissions: Record<UserRole, Permission[]> = {
+    [UserRole.Admin]: [
+      Permission.CreateRegistration,
+      Permission.EditRegistration,
+      Permission.DeleteRegistration,
+      Permission.ReviewRegistration,
+      Permission.ManageUsers,
+      Permission.ViewReports,
+    ],
+    [UserRole.Head]: [
+      Permission.CreateRegistration,
+      Permission.EditRegistration,
+      Permission.ReviewRegistration,
+      Permission.ViewReports,
+    ],
+    [UserRole.DateEntryOfficer]: [
+      Permission.CreateRegistration,
+      Permission.EditRegistration,
+    ],
+    [UserRole.Secretary]: [
+      Permission.CreateRegistration,
+      Permission.ViewReports,
+    ],
+    [UserRole.Staff]: [
+      Permission.CreateRegistration,
+    ],
+  };
+
+  return rolePermissions[user.role]?.includes(permission) || false;
+};
 
 const App: React.FC = () => {
   return (
@@ -65,10 +102,11 @@ const AppContent: React.FC = () => {
             <Route path="/registrations" element={<RegistrationList />} />
             <Route path="/registrations/:id" element={<RegistrationDetails />} />
             <Route path="/admin" element={<AdminLayout />}>
-              <Route path="create-user" element={<CreateUserPage />} />
-              <Route index element={<Navigate to="user-management" replace />} />
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="user-management" element={<UserManagement />} />
               <Route path="create-user" element={<CreateUserPage />} />
+              <Route path="edit-registration/:id" element={<EditRegistrationForm />} />
             </Route>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
