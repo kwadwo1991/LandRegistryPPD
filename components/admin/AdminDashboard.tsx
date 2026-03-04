@@ -3,6 +3,7 @@ import { LandParcel, RegistrationStatus, RegistrationType } from '../../types';
 import { LandRegistryService } from '../../services/landRegistryService';
 import Card from '../ui/Card';
 import { FileCheck2, FileClock, FileQuestion, Loader, Building2, Construction, Map } from 'lucide-react';
+import ExportButtons from '../ui/ExportButtons';
 
 const StatCard = ({ title, value, icon, colorClass }: { title: string; value: number | string; icon: React.ReactNode; colorClass: string; }) => (
     <Card>
@@ -49,6 +50,10 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-800">Overview Statistics</h2>
+                <ExportButtons data={parcels} filename="techiman_north_registrations_summary" />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
                     title="Total Applications" 

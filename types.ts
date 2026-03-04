@@ -5,6 +5,7 @@ export enum UserRole {
   DateEntryOfficer = 'Date Entry Officer',
   Secretary = 'Secretary',
   Staff = 'Staff',
+  PublicUser = 'Public User',
 }
 
 export enum Permission {
@@ -93,6 +94,9 @@ export interface RegistrationRecord {
   };
   status: RegistrationStatus;
   submissionDate: string;
+  dueDate?: string;
+  technicalSubcommitteeDate?: string;
+  spatialPlanningCommitteeDate?: string;
   documents: DocumentFile[];
   statusHistory: { status: RegistrationStatus; date: string; notes: string }[];
   auditLogs: AuditLog[];
@@ -100,6 +104,27 @@ export interface RegistrationRecord {
 }
 
 export type LandParcel = RegistrationRecord;
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  timestamp: string;
+  link?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userEmail: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  ipAddress?: string;
+}
 
 export interface ChatMessage {
     role: 'user' | 'model';

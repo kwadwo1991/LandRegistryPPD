@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard title="Pending Review" value={stats.pending} icon={<FileClock className="h-6 w-6 text-white"/>} colorClass="bg-yellow-500" />
                 <StatCard title="Queried" value={stats.queried} icon={<FileQuestion className="h-6 w-6 text-white"/>} colorClass="bg-orange-500" />
-                <StatCard title="Approved" value={stats.approved} icon={<FileCheck2 className="h-6 w-6 text-white"/>} colorClass="bg-green-500" />
+                <StatCard title="Approved / Registered" value={stats.approved} icon={<FileCheck2 className="h-6 w-6 text-white"/>} colorClass="bg-green-500" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -193,8 +193,8 @@ const Dashboard: React.FC = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.applicant.fullName}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(p.submissionDate).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${p.status === RegistrationStatus.Approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                            {p.status}
+                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${p.status === RegistrationStatus.Approved ? 'bg-green-100 text-green-800' : p.status === RegistrationStatus.Queried ? 'bg-orange-100 text-orange-800' : p.status === RegistrationStatus.Rejected ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                            {p.status === RegistrationStatus.Approved && p.type === RegistrationType.Land ? 'Registered' : p.status}
                                         </span>
                                     </td>
                                 </tr>
